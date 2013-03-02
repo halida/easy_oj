@@ -99,8 +99,8 @@ class TestCase(object):
         
         if p!=None:
             self.compileout,self.compileerr = p.communicate();
-        if not self.compileerr == None:
-            print "Compile Error"
+        if not self.compileerr == "":
+            print "Compile Error" + self.compileerr +"aaaaa"
             self.status =STATUS.COMPILE_ERROR
 
     def runScript(self,):
@@ -111,15 +111,21 @@ class TestCase(object):
         if self.language == LANGUAGE.JAVA:
             pass
         if self.language == LANGUAGE.PYTHON:
-            p = subprocess.Popen(["python",self.compilefile]);
-        if not stderr == None:
-            print "Wrong answer in runScript\n"
-            self.status =STATUS.WRONG_ANSWER
+            tmp =  os.popen("python " + self.compilefile).readlines()
+            print tmp
+#            p = subprocess.Popen(["python",self.compilefile],shell=True,stdin= subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, close_fds = True);
+            #self.compileout,self.compileerr = p.communicate();
+            for answer in tmp:
+                self.compileout += answer
+            print "run python finish:" + self.compileout
+        #if not self.compileerr == "":
+         #   print "Wrong answer in runScript\n"
+          #  self.status =STATUS.WRONG_ANSWER
 
     def compareResult(self,):
         """
         """
-        isSame = compareText(self.output, self.correctOutput)
+        isSame = compareText(self.compileout, self.correctOutput)
         if not isSame:
             print "Wrong Answer in compareResult\n"
             self.status =STATUS.WRONG_ANSWER
@@ -132,20 +138,19 @@ class TestCase(object):
         4. if memory || time over, return result
         5. compare the output, return result
         """
+        print "NeedAnswer:\n" + self.correctOutput 
         self.saveToDisk()
         
         self.compile()
         
-        if self.status != STATUS.ACCEPTED:
+        if not self.status == STATUS.ACCEPTED:
             self.postStatus()
             return
-        
         self.runScript()
-        if self.status != STATUS.ACCEPTED:
+        if not self.status == STATUS.ACCEPTED:
             self.postStatus()
             return
-        
-        self.compareResult()        
+        self.compareResult()   
         self.postStatus()
         
     def checkStaus(self,):
@@ -156,6 +161,7 @@ class TestCase(object):
         url = "http://" + SERVER +"/solutions/tester_set?token=" + TOKEN
         print "post status " + url + "for status " + self.status
         postData = {"solution_token": self.solution_token, "status": self.status}
+        print "solution token is " + self.solution_token
         data = post(url,postData)
             
         

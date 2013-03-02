@@ -11,6 +11,9 @@ def compareText(originText, compareText):
     Causion: if the last \n ignore
     
     """
+    print "compare"
+    print originText.rstrip()
+    print compareText
     if originText.rstrip() == compareText:
         return 1
     else:
