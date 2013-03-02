@@ -84,24 +84,22 @@ class TestCase(object):
     def compile(self,):
         """
         """
+        p = None
         if self.language == LANGUAGE.C:
             
-            self.compileout = subprocess.Popen('gcc -o '+self.filename+" "+self.compilefile);
+            p = subprocess.Popen('gcc -o '+self.filename+" "+self.compilefile);
             print self.compileout
         if self.language == LANGUAGE.JAVA:
             
             p = subprocess.Popen('javac '+self.filename,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);
             self.compilefile= self.filename[0:-4]+".class"
-            stdout,stderr = p.communicate();
-            print stdout+"     out"
-            print stderr+"       err"
+            self.compileout,self.compileerr = p.communicate();
         if self.language == LANGUAGE.PYTHON:
             self.compilefile = self.filename
-            p = subprocess.Popen(['python' ,'-m py_compile',self.filename],shell=True,stdout = subprocess.PIPE,stderr=subprocess.PIPE)
-            stdout,stderr = p.communicate();
-            print stdout+"     out"
-            print stderr+"       err"
-
+            p = subprocess.Popen(['python -m py_compile ' +self.filename],shell=True,stdout = subprocess.PIPE,stderr=subprocess.PIPE)
+        self.compileout,self.compileerr = p.communicate();
+        if p!=None:
+            p.close() 
     def runScript(self,):
         """
         """
