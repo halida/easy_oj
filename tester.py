@@ -1,7 +1,10 @@
+#!bin/bash
 from util import *
-import datetime
-import subprocess
 import time
+import os
+import  subprocess
+
+import datetime
 import threading
 
 SERVER = "192.168.1.107:3000"
@@ -13,9 +16,12 @@ LANGUAGE = enum(C='gcc', JAVA='javac', PYTHON='python')
 STATUS = enum( COMPILE_ERROR = "Compilation error", WRONG_ANSWER = "Wrong answer", TIME_LIMIT_EXCEEDED = "Time limit exceeded", MEMORY_LIMIT_EXCEEDED = "Memory limit exceeded", ACCEPTED = "Accepted")
 
 
+env = dict(os.environ)
+
 def convertLanguage(language):
     language_lower = language.lower()
     if language_lower == "c":
+        
         return LANGUAGE.C
     elif language_lower == 'java':
         return LANGUAGE.JAVA
@@ -36,6 +42,11 @@ class TestCase(object):
     correctOutput = ''
     code = ''
     solution_token = ''
+    filename = str(time.time())
+    compilefile = ''
+    compileout =''
+    compileerr=""
+    runout=""
     output = ''
     timeLimit = ''
     memoryLimit = 0
@@ -53,29 +64,58 @@ class TestCase(object):
         self.input = dataOfDict['input']
         self.correctOutput = dataOfDict['output']
 
-    def saveToDisk(self, ):
+    def saveToDisk(self,):
         """
         """
+    
+        if self.language == LANGUAGE.C:
+            self.filename = self.filename + ".c"
+        if self.language == LANGUAGE.JAVA:
+            self.filename = self.filename + '.java'
+        if self.language == LANGUAGE.PYTHON:
+            self.filename = self.filename + ".py"
+        
+        savefile = open(self.filename, 'w')
+        savefile.write(self.code);
+        savefile.close()
+        
         pass
 
-    def compile(self, ):
+    def compile(self,):
         """
         """
+        if self.language == LANGUAGE.C:
+            
+            self.compileout = subprocess.Popen('gcc -o '+self.filename+" "+self.compilefile);
+            print self.compileout
+        if self.language == LANGUAGE.JAVA:
+            
+            p = subprocess.Popen('javac '+self.filename,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);
+            self.compilefile= self.filename[0:-4]+".class"
+            stdout,stderr = p.communicate()
+            print stdout+"     out"
+            print stderr+"       err"
+        if self.language == LANGUAGE.PYTHON:
+            self.compilefile = self.filename
+            print "I'm Python not need Compile"
         pass
     
-    def runScript(self, ):
-        
+    def runScript(self,):
         """
         """
-
-        pass
+        if self.language == LANGUAGE.C:
+            pass
+        if self.language == LANGUAGE.JAVA:
+            pass
+        if self.language == LANGUAGE.PYTHON:
+            p = subprocess.Popen(["python",self.compilefile]);
     
     def compareResult(self,):
         """
         """
         pass
 
-    def runTest(self, ):
+    def runTest(self,):
         """
         1. save the data to a file in tmp folder (when finish run  be deleted)
         2. run the test
