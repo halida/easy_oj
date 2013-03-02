@@ -4,8 +4,16 @@ import time
 import os
 import  subprocess
 
+import datetime
+import threading
+
+SERVER = "192.168.1.107:3000"
+
+TOKEN = "asdfrewq"
+
 LANGUAGE = enum(C='gcc', JAVA='javac', PYTHON='python')
-ERROR = enum(ERROR_COMPILE="", ERROR_WRONG_ANSWER="", ERROR_TIME_OVER="", ERROR_MEMORY_OVER="")
+
+STATUS = enum( COMPILE_ERROR = "Compilation error", WRONG_ANSWER = "Wrong answer", TIME_LIMIT_EXCEEDED = "Time limit exceeded", MEMORY_LIMIT_EXCEEDED = "Memory limit exceeded", ACCEPTED = "Accepted")
 
 
 env = dict(os.environ)
@@ -20,12 +28,18 @@ def convertLanguage(language):
     elif language_lower == 'python':
         return LANGUAGE.PYTHON
 
+def timeMonitor(timeLimit, monitorProcess):
+    time.sleep(timeLimit)
+    if monitorProcess.is_alive():
+        return STATUS.TIME_LIMIT_EXCEEDED
+
+
 class TestCase(object):
     """
     """
     language = ''
     input = ''
-    output = ''
+    correctOutput = ''
     code = ''
     solution_token = ''
     filename = str(time.time())
@@ -33,11 +47,22 @@ class TestCase(object):
     compileout =''
     compileerr=""
     runout=""
+    output = ''
+    timeLimit = ''
+    memoryLimit = 0
+    status = ""
     
-    def __init__(self,):
+    def __init__(self, dataOfDict):
         """
         """
-        self.savefile = None
+        self.status = STATUS.ACCEPTED
+        self.timeLimit = dataOfDict['time_limit']
+        self.code = dataOfDict['code']
+        self.language = convertLanguage(dataOfDict['language'])
+        self.memoryLimit = dataOfDict['memory_limit']
+        self.solution_token = dataOfDict['solution_token']
+        self.input = dataOfDict['input']
+        self.correctOutput = dataOfDict['output']
 
     def saveToDisk(self,):
         """
@@ -84,9 +109,6 @@ class TestCase(object):
             pass
         if self.language == LANGUAGE.PYTHON:
             p = subprocess.Popen(["python",self.compilefile]);
-            pass
-        
-        pass
     
     def compareResult(self,):
         """
@@ -101,15 +123,27 @@ class TestCase(object):
         4. if memory || time over, return result
         5. compare the output, return result
         """
-        error = 0
         self.saveToDisk()
-        error = self.compile()
-        if error:
-            return 0
-        error = self.runScript()
-        error = self.compareResult()
+        
+        self.compile()
+        self.checkStaus()
+        self.runScript()
+        self.checkStaus()
+        self.compareResult()
+        
+        self.postStatus()
+        
+    def checkStaus(self,):
+        if self.status != STATUS.ACCEPTED:
+            self.postStatus()
 
-               
+    def postStatus(self,):
+        url = "http://" + SERVER +"/solutions/tester_set?token=" + TOKEN
+        print "post status " + url
+        postData = {"solution_token": self.solution_token, "status": self.status}
+        data = post(url,postData)
+            
+        
 if __name__ == '__main__':
     """
     code: "...", // source code
@@ -118,22 +152,56 @@ if __name__ == '__main__':
     output: "...", // expected stdout
     solution_token: "...", // used to identify solution
     """
+    url = "http://" + SERVER +"/solutions/tester_get?token=" + TOKEN
+    while True:
+        data = post(url, {})
+        if data != '{}':
+            dataOfDict = parseJSON(data)
+            testcase = TestCase(dataOfDict)
+            testcase.runTest()
+        time.sleep(2)
+
+
     """
     testcase for convert language
     """
-    assert convertLanguage("C") == LANGUAGE.C
-    assert convertLanguage("java") == LANGUAGE.JAVA
-    assert convertLanguage("PythoN") == LANGUAGE.PYTHON
-    print "language convert pass!"
+    assert convertLanguage("C") ==  LANGUAGE.C
+    assert convertLanguage("java") ==  LANGUAGE.JAVA
+    assert convertLanguage("PythoN") ==  LANGUAGE.PYTHON
+    print "language convert pass."
 
-    '''
-    testcase for normal case
-    '''
-    testcase = TestCase()
-    testcase.language = convertLanguage("java")
-    testcase.code = 'asdfasdf'
-    testcase.input = "asdfasdfasdf"
-    testcase.output = "asdf"
-    testcase.solution_token = "123aaa"
-    
-    testcase.runTest()
+
+    """
+    testcase for string compare
+    """
+    assert compareText("asdf", "asdf") == 0
+    assert compareText("asdf", "sad") == -1
+    assert compareText("asdf\n1234", "asdf\n1234") == 0
+    assert compareText("asdf\n1234\n\n", "asdf\n1234") == 0
+    assert compareText("asdf\n123", "asdf\n1234") == -1
+    print "compareText pass."
+
+    """
+    testcase for getNetworkData
+    """
+    url = "http://" + SERVER +"/solutions/tester_get?token=" + TOKEN
+    print url
+    postData = {}
+    data = post(url,postData)
+    print data
+    print "getNetworkData pass."
+    assert data != {}
+
+
+    """
+    testcase for setNetworkData
+    """
+    url = "http://" + SERVER +"/solutions/tester_set?token=" + TOKEN
+    print url
+    postData = {"solution_token": "256d3f5124ee", "status":"Accepted" }
+    data = post(url,postData)
+    mydict = ast.literal_eval( data)
+    print mydict
+    assert mydict['result'] == "OK"
+    print "setNetworkData pass."
+
