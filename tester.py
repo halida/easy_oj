@@ -76,14 +76,15 @@ class TestCase(object):
             self.filename = self.filename + ".py"
         
         savefile = open(self.filename, 'w')
+        print "-------------\n" +self.code + "\n-------------"
         savefile.write(self.code);
         savefile.close()
         
-        pass
 
     def compile(self,):
         """
         """
+        stderr = None
         if self.language == LANGUAGE.C:
             
             self.compileout = subprocess.Popen('gcc -o '+self.filename+" "+self.compilefile);
@@ -97,10 +98,13 @@ class TestCase(object):
             print stderr+"       err"
         if self.language == LANGUAGE.PYTHON:
             self.compilefile = self.filename
-            p = subprocess.Popen(['python' ,'-m py_compile',self.filename],shell=True,stdout = subprocess.PIPE,stderr=subprocess.PIPE)
+            p = subprocess.Popen('python -m py_compile ' + self.filename,shell=True,stdout = subprocess.PIPE,stderr=subprocess.PIPE)
             stdout,stderr = p.communicate();
             print stdout+"     out"
             print stderr+"       err"
+        if not stderr == None:
+            print "Compile Error"
+            self.status =STATUS.COMPILE_ERROR
 
     def runScript(self,):
         """
@@ -111,11 +115,17 @@ class TestCase(object):
             pass
         if self.language == LANGUAGE.PYTHON:
             p = subprocess.Popen(["python",self.compilefile]);
-    
+        if not stderr == None:
+            print "Wrong answer in runScript\n"
+            self.status =STATUS.WRONG_ANSWER
+
     def compareResult(self,):
         """
         """
-        pass
+        isSame = compareText(self.output, self.correctOutput)
+        if not isSame:
+            print "Wrong Answer in compareResult\n"
+            self.status =STATUS.WRONG_ANSWER
 
     def runTest(self,):
         """
@@ -147,7 +157,7 @@ class TestCase(object):
 
     def postStatus(self,):
         url = "http://" + SERVER +"/solutions/tester_set?token=" + TOKEN
-        print "post status " + url
+        print "post status " + url + "for status " + self.status
         postData = {"solution_token": self.solution_token, "status": self.status}
         data = post(url,postData)
             
