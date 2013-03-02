@@ -25,7 +25,7 @@ def convertLanguage(language):
 def timeMonitor(timeLimit, monitorProcess):
     time.sleep(timeLimit)
     if monitorProcess.is_alive():
-        return ERROR_TIME_OVER
+        return STATUS.TIME_LIMIT_EXCEEDED
 
 
 class TestCase(object):
@@ -86,11 +86,17 @@ class TestCase(object):
         self.saveToDisk()
         
         self.compile()
-        self.checkStaus()
-        self.runScript()
-        self.checkStaus()
-        self.compareResult()
         
+        if self.status != STATUS.ACCEPTED:
+            self.postStatus()
+            return
+        
+        self.runScript()
+        if self.status != STATUS.ACCEPTED:
+            self.postStatus()
+            return
+        
+        self.compareResult()        
         self.postStatus()
         
     def checkStaus(self,):
