@@ -10,7 +10,7 @@ TOKEN = "asdfrewq"
 
 LANGUAGE = enum(C='gcc', JAVA='javac', PYTHON='python')
 
-ERROR = enum( ERROR_COMPILE = "COMPILE_ERROR", ERROR_WRONG_ANSWER = "WRONG_ANSWER", ERROR_TIME_OVER = "TIME_OVER", ERROR_MEMORY_OVER = "MEMORY_OVER")
+STATUS = enum( COMPILE_ERROR = "Compilation error", WRONG_ANSWER = "Wrong answer", TIME_LIMIT_EXCEEDED = "Time limit exceeded", MEMORY_LIMIT_EXCEEDED = "Memory limit exceeded", ACCEPTED = "Accepted")
 
 
 def convertLanguage(language):
@@ -39,10 +39,12 @@ class TestCase(object):
     output = ''
     timeLimit = ''
     memoryLimit = 0
+    status = ""
     
     def __init__(self, dataOfDict):
         """
         """
+        self.status = STATUS.ACCEPTED
         self.timeLimit = dataOfDict['time_limit']
         self.code = dataOfDict['code']
         self.language = convertLanguage(dataOfDict['language'])
@@ -81,15 +83,27 @@ class TestCase(object):
         4. if memory || time over, return result
         5. compare the output, return result
         """
-        error = 0
         self.saveToDisk()
-        error = self.compile()
-        if error:
-            return 0
-        error = self.runScript()
-        error = self.compareResult()
+        
+        self.compile()
+        self.checkStaus()
+        self.runScript()
+        self.checkStaus()
+        self.compareResult()
+        
+        self.postStatus()
+        
+    def checkStaus(self,):
+        if self.status != STATUS.ACCEPTED:
+            self.postStatus()
 
-               
+    def postStatus(self,):
+        url = "http://" + SERVER +"/solutions/tester_set?token=" + TOKEN
+        print "post status " + url
+        postData = {"solution_token": self.solution_token, "status": self.status}
+        data = post(url,postData)
+            
+        
 if __name__ == '__main__':
     """
     code: "...", // source code
@@ -106,10 +120,6 @@ if __name__ == '__main__':
             testcase = TestCase(dataOfDict)
             testcase.runTest()
         time.sleep(2)
-
-
-
-
 
 
     """
@@ -155,17 +165,3 @@ if __name__ == '__main__':
     assert mydict['result'] == "OK"
     print "setNetworkData pass."
 
-"""
-    '''
-    testcase for normal case
-    '''
-    testcase = TestCase()
-    testcase.language = convertLanguage("C")
-    testcase.code = 'asdfasdf'
-    testcase.input = "asdfasdfasdf"
-    testcase.correctOutput = "asdf"
-    testcase.solution_token = "123aaa"
-    testcase.timeLimit = "5"  #5 seconds
-    testcase.memoryLimit = 10240 # 10M
-    testcase.runTest()
-"""
