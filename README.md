@@ -12,3 +12,9 @@
     - ulimit -v size :设置虚拟内存的最大值.单位:kb
     - if time is over, terminal the process
     
+3. Result Define:
+- Accepted
+- Wrong answer
+- Compilation error
+- Time limit exceeded
+- Memory limit exceeded
