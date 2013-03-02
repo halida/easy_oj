@@ -18,3 +18,9 @@
 - Compilation error
 - Time limit exceeded
 - Memory limit exceeded
+
+
+
+## get network data##
+
+192.168.1.207:3000
