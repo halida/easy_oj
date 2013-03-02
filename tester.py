@@ -1,12 +1,19 @@
+#!bin/bash
 from util import *
+import time
+import os
+import  subprocess
 
 LANGUAGE = enum(C='gcc', JAVA='javac', PYTHON='python')
-ERROR = enum( ERROR_COMPILE = "", ERROR_WRONG_ANSWER = "", ERROR_TIME_OVER = "", ERROR_MEMORY_OVER = "")
+ERROR = enum(ERROR_COMPILE="", ERROR_WRONG_ANSWER="", ERROR_TIME_OVER="", ERROR_MEMORY_OVER="")
 
+
+env = dict(os.environ)
 
 def convertLanguage(language):
     language_lower = language.lower()
     if language_lower == "c":
+        
         return LANGUAGE.C
     elif language_lower == 'java':
         return LANGUAGE.JAVA
@@ -21,25 +28,64 @@ class TestCase(object):
     output = ''
     code = ''
     solution_token = ''
+    filename = str(time.time())
+    compilefile = ''
+    compileout =''
+    compileerr=""
+    runout=""
     
-    
-    def __init__(self, ):
+    def __init__(self,):
         """
         """
+        self.savefile = None
 
-    def saveToDisk(self, ):
+    def saveToDisk(self,):
         """
         """
+    
+        if self.language == LANGUAGE.C:
+            self.filename = self.filename + ".c"
+        if self.language == LANGUAGE.JAVA:
+            self.filename = self.filename + '.java'
+        if self.language == LANGUAGE.PYTHON:
+            self.filename = self.filename + ".py"
+        
+        savefile = open(self.filename, 'w')
+        savefile.write(self.code);
+        savefile.close()
+        
         pass
 
-    def compile(self, ):
+    def compile(self,):
         """
         """
+        if self.language == LANGUAGE.C:
+            
+            self.compileout = subprocess.Popen('gcc -o '+self.filename+" "+self.compilefile);
+            print self.compileout
+        if self.language == LANGUAGE.JAVA:
+            
+            p = subprocess.Popen('javac '+self.filename,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);
+            self.compilefile= self.filename[0:-4]+".class"
+            stdout,stderr = p.communicate()
+            print stdout+"     out"
+            print stderr+"       err"
+        if self.language == LANGUAGE.PYTHON:
+            self.compilefile = self.filename
+            print "I'm Python not need Compile"
         pass
     
-    def runScript(self, ):
+    def runScript(self,):
         """
         """
+        if self.language == LANGUAGE.C:
+            pass
+        if self.language == LANGUAGE.JAVA:
+            pass
+        if self.language == LANGUAGE.PYTHON:
+            p = subprocess.Popen(["python",self.compilefile]);
+            pass
+        
         pass
     
     def compareResult(self,):
@@ -47,7 +93,7 @@ class TestCase(object):
         """
         pass
 
-    def runTest(self, ):
+    def runTest(self,):
         """
         1. save the data to a file in tmp folder (when finish run  be deleted)
         2. run the test
@@ -75,16 +121,16 @@ if __name__ == '__main__':
     """
     testcase for convert language
     """
-    assert convertLanguage("C") ==  LANGUAGE.C
-    assert convertLanguage("java") ==  LANGUAGE.JAVA
-    assert convertLanguage("PythoN") ==  LANGUAGE.PYTHON
+    assert convertLanguage("C") == LANGUAGE.C
+    assert convertLanguage("java") == LANGUAGE.JAVA
+    assert convertLanguage("PythoN") == LANGUAGE.PYTHON
     print "language convert pass!"
 
     '''
     testcase for normal case
     '''
     testcase = TestCase()
-    testcase.language = convertLanguage("C")
+    testcase.language = convertLanguage("java")
     testcase.code = 'asdfasdf'
     testcase.input = "asdfasdfasdf"
     testcase.output = "asdf"
