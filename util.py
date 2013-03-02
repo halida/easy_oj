@@ -12,9 +12,9 @@ def compareText(originText, compareText):
     
     """
     if originText.rstrip() == compareText:
-        return 0
+        return 1
     else:
-        return -1
+        return 0
 
 
 def post(url, data):
