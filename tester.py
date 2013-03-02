@@ -92,14 +92,16 @@ class TestCase(object):
             
             p = subprocess.Popen('javac '+self.filename,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);
             self.compilefile= self.filename[0:-4]+".class"
-            stdout,stderr = p.communicate()
+            stdout,stderr = p.communicate();
             print stdout+"     out"
             print stderr+"       err"
         if self.language == LANGUAGE.PYTHON:
             self.compilefile = self.filename
-            print "I'm Python not need Compile"
-        pass
-    
+            p = subprocess.Popen(['python' ,'-m py_compile',self.filename],shell=True,stdout = subprocess.PIPE,stderr=subprocess.PIPE)
+            stdout,stderr = p.communicate();
+            print stdout+"     out"
+            print stderr+"       err"
+
     def runScript(self,):
         """
         """
